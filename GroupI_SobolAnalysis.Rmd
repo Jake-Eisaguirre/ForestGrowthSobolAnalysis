@@ -1,0 +1,28 @@
+---
+title: "Sensitivity Analysis - Sobol "
+author: "Group I - Jake Eisaguirre, Yuitan Fang, Julia Parish"
+date: '2022-05-19'
+header-includes:
+  - \usepackage{float}
+  - \floatplacement{figure}{H}
+output: 
+  pdf_document:
+    extra_dependencies: ["float"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.width=6, fig.height=4, warning=FALSE, 
+                      message=FALSE, fig.pos='!H')
+```
+
+# Sensitivity Analysis - Sobol 
+
+This environmental model was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The goal of this assignment was to code a function to compute . This assignment focuses on developing skills to create   .
+
+## Load Libraries
+```{r, message=FALSE, warning=FALSE}
+
+library(here)
+library(tidyverse)
+library(kableExtra)
+```
