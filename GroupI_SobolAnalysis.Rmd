@@ -25,4 +25,36 @@ This environmental model was completed as an assignment for the course, Environm
 library(here)
 library(tidyverse)
 library(kableExtra)
+library(deSolve)
+library(sensitivity)
+
 ```
+
+### Run the model for 300 years (with ODE solver) and plot the result
+```{r}
+# source the function
+
+source(here("R","forestgrowthrate.R"))
+dgrowthrate
+
+# create parameter list and specify the initial size and years to run the model
+initialsize = 10
+years = seq(from = 1, to = 300, by = 5)
+parms = list(r = 0.01, g = 2, K = 250, threshold = 50)
+
+#apply solver
+results = ode(initialsize, years, dgrowthrate, parms)
+head(results)
+
+#add meaningful names to columns of results
+colnames(results) = c("year", "C")
+
+#plot
+ggplot(as.data.frame(results), aes(year,C))+geom_point()+labs(y="Forest Size (C kg)", x="Years")
+
+
+```
+
+
+
+
