@@ -10,16 +10,19 @@ Original assignment instructions can be found [here](https://naomitague.github.i
 
 ### Motivation and Goal
 
-This environmental model and analysis was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The source data and model design is based on parameters provided from our professor and [here](https://naomitague.github.io/ESM232_course/assignments/TBD). This assignment focuses on developing skills to 
+This environmental model and analysis was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The source data and model design is based on parameters provided from our professor and [here](https://naomitague.github.io/ESM232_course/assignments/TBD). 
 
-The **goal** of this assignment was to conduct a formal sensitivity analysis using the .
+The **goal** of this assignment was to conduct a formal sobol sensitivity analysis.
 
 ### Installation
 The following **packages** were utilized:
+
+- `deSolve`
 - `here`
-- ` `
-- ` `
-- ` `
+- `kableExtra`
+- `sensitivity`
+- `tidyverse`
+
 
 ### Data
 
@@ -31,9 +34,9 @@ Consider the following model of forest growth (where forest size in measured in 
 
 - dC/dt=r∗C for forests where C is below a threshold canopy closure
 - dC/dt=g∗(1−C/K) for forests where carbon is at or above the threshold canopy closure
-- K is a carrying capacity in units of carbon
 - The size of the forest (C), Canopy closure threshold and carrying capacity are all in units of carbon
 - the canopy closure threshold as the size of the forest at which growth rates change from exponential to linear
+- `K` is a carrying capacity in units of carbon
 - `r` as early exponential growth rate and g as the linear growth rate once canopy closure has been reached
 
 ### Tasks 
