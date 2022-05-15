@@ -11,13 +11,18 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, fig.width=6, fig.height=4, warning=FALSE, 
-                      message=FALSE, fig.pos='!H')
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width=6, fig.height=4, fig.pos='!H')
 ```
 
 # Sensitivity Analysis - Sobol 
 
-This environmental model was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The goal of this assignment was to code a function to compute . This assignment focuses on developing skills to create   .
+This environmental model was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The goal of this assignment was to code a function to compute forest growth and conduct a sobol sensitivity analysis that explores how the estimated maximum and mean forest size varies. This assignment focuses on developing skills to create a model of forest growth and conduct a sobol sensitivity analysis.
+
+### Parameters
+
+- K = carrying capacity (C)
+- r = pre-canopy closure rate
+- g = post-canopy closure rate
 
 ## Load Libraries
 ```{r, message=FALSE, warning=FALSE}
@@ -27,34 +32,150 @@ library(tidyverse)
 library(kableExtra)
 library(deSolve)
 library(sensitivity)
+library(purrr)
 
 ```
 
-### Run the model for 300 years (with ODE solver) and plot the result
-```{r}
+# 1. Implement a forest growth rate model 
+Forest size is measured in units of carbon (C)
+
+```{r, model}
 # source the function
 
 source(here("R","forestgrowthrate.R"))
-dgrowthrate
 
+dgrowthrate
+```
+
+# 2. Run the model for 300 years (with ODE solver) and plot the result
+
+## Parameters for model
+
+- threshold = 50 kgC (canopy closure threshold)
+- K = 250 kg C (carrying capacity)
+- r = 0.01 (exponential growth rate before before canopy closure)
+- g = 2 kg/year (linear growth rate after canopy closure)
+
+```{r, ode}
 # create parameter list and specify the initial size and years to run the model
-initialsize = 10
-years = seq(from = 1, to = 300, by = 5)
-parms = list(r = 0.01, g = 2, K = 250, threshold = 50)
+
+# set parameters
+K = 250
+r = 0.01
+g = 2
+threshold = 50
+
+initialsize <- 10
+years <- seq(from = 1, to = 300, by = 5)
+parms <- list(K = K, r = r, g = g,  threshold = threshold)
 
 #apply solver
-results = ode(initialsize, years, dgrowthrate, parms)
+results <- ode(initialsize, years, dgrowthrate, parms)
+
+# convert results to data frame
+results <- as.data.frame(results)
+
+# view sample of df
 head(results)
 
 #add meaningful names to columns of results
 colnames(results) = c("year", "C")
 
-#plot
-ggplot(as.data.frame(results), aes(year,C))+geom_point()+labs(y="Forest Size (C kg)", x="Years")
+```
 
+```{r, ode plot}
+# plot results
+model01_plot <- results %>% 
+  ggplot(aes(x = year, y = C)) +
+  geom_point(color = "darkgreen") + 
+  labs(x = "Years", y = "Forest Size (C kg)",
+       title = "Forest Growth Rate - 300 Years",
+       subtitle = "K = 250kg C, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
+  theme_minimal()
+
+model01_plot
+```
+
+# 3.A. Run a sobol sensitivity analysis that explores how the estimated maximum and mean forest size (e.g maximum and mean values of C over the 300 years) varies with the pre canopy closure growth rate (r) and post-canopy closure growth rate (g) and canopy closure threshold and carrying capacity(K)
+
+Assume that parameters are all normally distributed with means as given above and standard deviation of 10% of mean value
+
+```{r, sobol sensitivity}
+
+# set the number of parameters
+np = 200
+
+K = rnorm(mean = K, sd = K*0.01, n = np)
+r = rnorm(mean = r, sd = r*0.01, n = np)
+g = rnorm(mean = g, sd = g*0.01, n = np)
+threshold = rnorm(mean = threshold, sd = threshold*0.01, n = np)
+
+X1 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
+
+# repeat to calculate second set of samples
+np = 200
+
+K = rnorm(mean = K, sd = K*0.01, n = np)
+r = rnorm(mean = r, sd = r*0.01, n = np)
+g = rnorm(mean = g, sd = g*0.01, n = np)
+threshold = rnorm(mean = threshold, sd = threshold*0.01, n = np)
+
+X2 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
+
+```
+
+```{r}
+# create sobol object and get parameters
+sens_forest <- sobol(model = NULL, X1, X2, nboot = 300)
+
+colnames(sens_forest$X) <- c("r", "K", "g", "threshold")
+
+parameters <- list(r = sens_forest$X[1,1],
+                  K = sens_forest$X[1,2], 
+                  g = sens_forest$X[1,3],
+                  threshold = sens_forest$X[1,4])
+
+forest_sensitivity <- ode(func = dgrowthrate, y = initialsize, times = years, parms = parameters)
+
+forest_sens_df <- as.data.frame(forest_sensitivity)
+colnames(forest_sens_df) = c("time","C")
+```
+
+```{r}
+# ????????
+  
+# turn computing our metrics into a function
+
+# compute_metrics = function(result) {
+#   maxpop = max(result$P)
+# idx = which.max(result$P)
+# maxyear = result$time[idx]
+# return(list(maxpop=maxpop, maxyear=maxyear))}
+# 
+# # try it on our first parameter set
+# compute_metrics(result)
+
+# or
+
+# https://naomitague.github.io/ESM232_course/lectures/lecture12_growth.html#(5)
+# use a wrapper function to just return the carbon trajectories
+# p_wrapper = function(r,harv, K, Pinitial, simtimes, func) {
+#     parms = list(r=r, K=K, harv=harv)
+#     result = ode(y=Pinitial, times=simtimes, func=func, parms=parms) 
+#     result=as.data.frame(result)
+#    colnames(result)=c("time","C")
+#   # get metrics
+#   metrics=compute_metrics(result$C)
+#   return(metrics)
+# }
+```
+
+
+# 3.B. Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). 
+
+```{r, box plot}
 
 ```
 
 
-
-
+# 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth
