@@ -75,13 +75,23 @@ results <- ode(initialsize, years, dgrowthrate, parms)
 # convert results to data frame
 results <- as.data.frame(results)
 
-# view sample of df
-head(results)
-
 #add meaningful names to columns of results
 colnames(results) = c("year", "C")
 
 ```
+
+```{r}
+# view sample of df
+results_sample <- head(results) 
+
+results_table <- kable(results_sample, 
+                         caption = "Sample of Forest Growth ODE Model Results") %>% 
+  kable_styling(latex_options = "HOLD_position")
+
+results_table
+
+```
+
 
 ```{r, ode plot}
 # plot results
