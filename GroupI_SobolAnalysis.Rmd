@@ -1,5 +1,5 @@
 ---
-title: "Sensitivity Analysis - Sobol "
+title: "Growth Model & Sensitivity Analysis - Sobol "
 author: "Group I - Jake Eisaguirre, Yuitan Fang, Julia Parish"
 date: '2022-05-19'
 header-includes:
@@ -14,7 +14,7 @@ output:
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width=6, fig.height=4, fig.pos='!H')
 ```
 
-# Sensitivity Analysis - Sobol 
+# Growth Model & Sobol Sensitivity Analysis
 
 This environmental model was completed as an assignment for the course, Environmental Data Science 230 | Environmental Science & Management: Modeling Environmental Systems. The goal of this assignment was to code a function to compute forest growth and conduct a sobol sensitivity analysis that explores how the estimated maximum and mean forest size varies. This assignment focuses on developing skills to create a model of forest growth and conduct a sobol sensitivity analysis.
 
