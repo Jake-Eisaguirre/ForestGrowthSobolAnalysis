@@ -141,28 +141,22 @@ sens_forest <- sobolSalt(model = NULL, X1, X2, nboot = 300)
 sens_forestSize_df <- sens_forest$X %>% 
   as.data.frame()
 
-<<<<<<< HEAD
-parameters <- list(r = sens_forest$X[1,1],
-                   K = sens_forest$X[1,2],
-                   g = sens_forest$X[1,3],
-                   threshold = sens_forest$X[1,4])
-
 sens_forestSize_df <- sens_forestSize_df %>% 
-  rename(threshold = "V1", 
-         r = "V2", 
+  rename(r = "V1", 
+         K = "V2", 
          g = "V3", 
-         K = "V4")
+         threshold = "V4")
 ```
 >>>>>>> 03c901cfbd82ecf2af10a3735460cfdbf6aa20cd
 
 
 ```{r, wrapper}
-p_wrapper = function(threshold, r, g, K, func) {
+p_wrapper = function(threshold, r, g, K, initialsize, years, func) {
   
-  params <- list(threshold = threshold, r = r, g = g, K = K)
+  parms <- list(threshold = threshold, r = r, g = g, K = K)
   
   forest_sensitivity <- ode(func = dgrowthrate, y = initialsize, times = years, 
-                            parms = params)
+                            parms = parms)
   
   forest_sensitivity <- as.data.frame(forest_sensitivity)
   
@@ -180,7 +174,7 @@ p_wrapper = function(threshold, r, g, K, func) {
 
 ```{r, forest senstivity results}
 allresults = sens_forestSize_df %>% 
-  pmap(p_wrapper, 
+  pmap(p_wrapper, initialsize = initialsize, years = years,
        func = dgrowthrate)
 
 allres = allresults %>% 
@@ -212,7 +206,7 @@ sense_mean <- sensitivity::tell(sens_forest, allres$mean_carbon)
 sense_mean_S <- as.data.frame(sense_mean$S)
 
 sense_mean_S <- sense_mean_S %>% 
-  rowid_to_column(var = "params")
+  rowid_to_column(var = "parms")
 
 sense_mean_S[1,1] <- "threshold"
 sense_mean_S[2,1] <- "r"
@@ -222,7 +216,7 @@ sense_mean_S[4,1] <- "K"
 sense_mean_T <- as.data.frame(sense_mean$T)
 
 sense_mean_T <- sense_mean_T %>% 
-  rowid_to_column(var = "params")
+  rowid_to_column(var = "parms")
 
 sense_mean_T[1,1] <- "threshold"
 sense_mean_T[2,1] <- "r"
@@ -236,7 +230,7 @@ sense_max <- sensitivity::tell(sens_forest, allres$max_carbon)
 sense_max_S <- as.data.frame(sense_max$S)
 
 sense_max_S <- sense_max_S %>% 
-  rowid_to_column(var = "params")
+  rowid_to_column(var = "parms")
 
 sense_max_S[1,1] <- "threshold"
 sense_max_S[2,1] <- "r"
@@ -247,7 +241,7 @@ sense_max_S[4,1] <- "K"
 sense_max_T <- as.data.frame(sense_max$T)
 
 sense_max_T <- sense_max_T %>% 
-  rowid_to_column(var = "params")
+  rowid_to_column(var = "parms")
 
 sense_max_T[1,1] <- "threshold"
 sense_max_T[2,1] <- "r"

@@ -9,17 +9,17 @@
 #' @return dC change in forest size with time
 #'
 dgrowthrate = function(time, C, parms) {
-  
   # compute rate of forest growth when C < threshold
   if(C < parms$threshold) {
-    dC = parms$r*C
-    return(list(dC))
+    dC = parms$r * C
   }
-  
   # compute rate of forest growth when C > = threshold
-  else{
+  if(C >= parms$threshold) {
     dC = parms$g * (1 - C/parms$K)
-    
-  return(list(dC))
   }
+  # set rate of forest growth to 0 when C reaches carrying capacity K
+  if (C > parms$K) {
+    dC = 0
+  }
+    return(list(dC))
 }
