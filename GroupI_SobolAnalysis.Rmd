@@ -33,7 +33,7 @@ library(kableExtra)
 library(deSolve)
 library(sensitivity)
 library(purrr)
-
+library(viridis)
 ```
 
 # 1. Implement a forest growth rate model 
@@ -100,7 +100,7 @@ model01_plot <- results %>%
   geom_point(color = "darkgreen") + 
   labs(x = "Years", y = "Forest Size (C kg)",
        title = "Forest Growth Rate - 300 Years",
-       subtitle = "K = 250kg C, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
+       subtitle = "K = 250 kgC, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
   theme_minimal()
 
 model01_plot
@@ -110,7 +110,7 @@ model01_plot
 
 Assume that parameters are all normally distributed with means as given above and standard deviation of 10% of mean value
 
-```{r, sobol sensitivity}
+```{r, parameters}
 
 # set the number of parameters
 np = 200
@@ -134,7 +134,7 @@ X2 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
 
 ```
 
-```{r}
+```{r, sobol sensitivity}
 # create sobol object and get parameters
 sens_forest <- sobolSalt(model = NULL, X1, X2, nboot = 300)
 
@@ -146,11 +146,10 @@ sens_forestSize_df <- sens_forestSize_df %>%
          r = "V2", 
          g = "V3", 
          K = "V4")
+```
 
 
-
-
-
+```{r, wrapper}
 p_wrapper = function(threshold, r, g, K, func) {
   
   params <- list(threshold = threshold, r = r, g = g, K = K)
@@ -169,26 +168,35 @@ p_wrapper = function(threshold, r, g, K, func) {
 
   return(list(max_carbon=max_carbon, mean_carbon=mean_carbon))
 }
+```
 
+
+```{r, forest senstivity results}
 allresults = sens_forestSize_df %>% 
   pmap(p_wrapper, 
        func = dgrowthrate)
 
 allres = allresults %>% 
   map_dfr(`[`,c("max_carbon","mean_carbon"))
+
+all_results <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to = "name", values_to = "carbon")
 ```
 
 
 # 3.B. Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). 
 
 ```{r, box plot}
-
-all_res <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to = "name", values_to = "carbon")
-
-
-ggplot(data = all_res) +
-  geom_boxplot(aes(y = carbon, x = name, fill = name))
-
+results_plot <- all_results %>% 
+  ggplot(aes(y = carbon, x = name, fill = name)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  labs(x= "", y = "Carbon (kg)",
+       title = "Sobol Analysis - Forest Growth",
+       subtitle = "Max & mean values of Carbon over 300 years)") +
+  theme_minimal() +
+  theme(legend.position="none")
+  
+results_plot
 ```
 
 ```{r}
