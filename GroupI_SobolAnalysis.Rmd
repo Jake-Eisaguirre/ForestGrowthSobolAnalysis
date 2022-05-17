@@ -33,7 +33,7 @@ library(kableExtra)
 library(deSolve)
 library(sensitivity)
 library(purrr)
-
+library(viridis)
 ```
 
 # 1. Implement a forest growth rate model 
@@ -66,7 +66,7 @@ g = 2
 threshold = 50
 
 initialsize <- 10
-years <- seq(from = 1, to = 300, by = 5)
+years <- seq(from = 1, to = 300, by = 1)
 parms <- list(K = K, r = r, g = g,  threshold = threshold)
 
 #apply solver
@@ -100,7 +100,7 @@ model01_plot <- results %>%
   geom_point(color = "darkgreen") + 
   labs(x = "Years", y = "Forest Size (C kg)",
        title = "Forest Growth Rate - 300 Years",
-       subtitle = "K = 250kg C, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
+       subtitle = "K = 250 kgC, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
   theme_minimal()
 
 model01_plot
@@ -110,82 +110,150 @@ model01_plot
 
 Assume that parameters are all normally distributed with means as given above and standard deviation of 10% of mean value
 
-```{r, sobol sensitivity}
+```{r, parameters}
 
 # set the number of parameters
 np = 200
 
-K = rnorm(mean = K, sd = K*0.01, n = np)
-r = rnorm(mean = r, sd = r*0.01, n = np)
-g = rnorm(mean = g, sd = g*0.01, n = np)
-threshold = rnorm(mean = threshold, sd = threshold*0.01, n = np)
+K = rnorm(mean = K, sd = K*0.10, n = np)
+r = rnorm(mean = r, sd = r*0.10, n = np)
+g = rnorm(mean = g, sd = g*0.10, n = np)
+threshold = rnorm(mean = threshold, sd = threshold*0.10, n = np)
 
 X1 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
 
 # repeat to calculate second set of samples
 np = 200
 
-K = rnorm(mean = K, sd = K*0.01, n = np)
-r = rnorm(mean = r, sd = r*0.01, n = np)
-g = rnorm(mean = g, sd = g*0.01, n = np)
-threshold = rnorm(mean = threshold, sd = threshold*0.01, n = np)
+K = rnorm(mean = K, sd = K*0.10, n = np)
+r = rnorm(mean = r, sd = r*0.10, n = np)
+g = rnorm(mean = g, sd = g*0.10, n = np)
+threshold = rnorm(mean = threshold, sd = threshold*0.10, n = np)
 
 X2 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
 
 ```
 
-```{r}
+```{r, sobol sensitivity}
 # create sobol object and get parameters
 sens_forest <- sobolSalt(model = NULL, X1, X2, nboot = 300)
 
-colnames(sens_forest$X) <- c("r", "K", "g", "threshold")
+sens_forestSize_df <- sens_forest$X %>% 
+  as.data.frame()
 
+<<<<<<< HEAD
 parameters <- list(r = sens_forest$X[1,1],
                    K = sens_forest$X[1,2],
                    g = sens_forest$X[1,3],
                    threshold = sens_forest$X[1,4])
 
-forest_sensitivity <- ode(func = dgrowthrate, y = initialsize, times = years, parms = parameters)
+sens_forestSize_df <- sens_forestSize_df %>% 
+  rename(threshold = "V1", 
+         r = "V2", 
+         g = "V3", 
+         K = "V4")
+```
+>>>>>>> 03c901cfbd82ecf2af10a3735460cfdbf6aa20cd
 
-forest_sens_df <- as.data.frame(forest_sensitivity)
-colnames(forest_sens_df) = c("time","C")
+
+```{r, wrapper}
+p_wrapper = function(threshold, r, g, K, func) {
+  
+  params <- list(threshold = threshold, r = r, g = g, K = K)
+  
+  forest_sensitivity <- ode(func = dgrowthrate, y = initialsize, times = years, 
+                            parms = params)
+  
+  forest_sensitivity <- as.data.frame(forest_sensitivity)
+  
+  colnames(forest_sensitivity) = c("years","C")
+
+  # get metrics
+  
+  max_carbon <- max(forest_sensitivity$C)
+  mean_carbon <- mean(forest_sensitivity$C)
+
+  return(list(max_carbon=max_carbon, mean_carbon=mean_carbon))
+}
 ```
 
-```{r}
-# ????????
-  
-# turn computing our metrics into a function
 
-# compute_metrics = function(result) {
-#   maxpop = max(result$P)
-# idx = which.max(result$P)
-# maxyear = result$time[idx]
-# return(list(maxpop=maxpop, maxyear=maxyear))}
-# 
-# # try it on our first parameter set
-# compute_metrics(result)
+```{r, forest senstivity results}
+allresults = sens_forestSize_df %>% 
+  pmap(p_wrapper, 
+       func = dgrowthrate)
 
-# or
+allres = allresults %>% 
+  map_dfr(`[`,c("max_carbon","mean_carbon"))
 
-# https://naomitague.github.io/ESM232_course/lectures/lecture12_growth.html#(5)
-# use a wrapper function to just return the carbon trajectories
-# p_wrapper = function(r,harv, K, Pinitial, simtimes, func) {
-#     parms = list(r=r, K=K, harv=harv)
-#     result = ode(y=Pinitial, times=simtimes, func=func, parms=parms) 
-#     result=as.data.frame(result)
-#    colnames(result)=c("time","C")
-#   # get metrics
-#   metrics=compute_metrics(result$C)
-#   return(metrics)
-# }
+all_results <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to = "name", values_to = "carbon")
 ```
 
 
 # 3.B. Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). 
 
 ```{r, box plot}
-
+results_plot <- all_results %>% 
+  ggplot(aes(y = carbon, x = name, fill = name)) +
+  geom_boxplot() +
+  scale_fill_viridis(discrete = TRUE, alpha=0.6) +
+  labs(x= "", y = "Carbon (kg)",
+       title = "Sobol Analysis - Forest Growth",
+       subtitle = "Max & mean values of Carbon over 300 years)") +
+  theme_minimal() +
+  theme(legend.position="none")
+  
+results_plot
 ```
 
+```{r}
+sense_mean <- sensitivity::tell(sens_forest, allres$mean_carbon)
+
+sense_mean_S <- as.data.frame(sense_mean$S)
+
+sense_mean_S <- sense_mean_S %>% 
+  rowid_to_column(var = "params")
+
+sense_mean_S[1,1] <- "threshold"
+sense_mean_S[2,1] <- "r"
+sense_mean_S[3,1] <- "g"
+sense_mean_S[4,1] <- "K"
+
+sense_mean_T <- as.data.frame(sense_mean$T)
+
+sense_mean_T <- sense_mean_T %>% 
+  rowid_to_column(var = "params")
+
+sense_mean_T[1,1] <- "threshold"
+sense_mean_T[2,1] <- "r"
+sense_mean_T[3,1] <- "g"
+sense_mean_T[4,1] <- "K"
+
+
+
+sense_max <- sensitivity::tell(sens_forest, allres$max_carbon)
+
+sense_max_S <- as.data.frame(sense_max$S)
+
+sense_max_S <- sense_max_S %>% 
+  rowid_to_column(var = "params")
+
+sense_max_S[1,1] <- "threshold"
+sense_max_S[2,1] <- "r"
+sense_max_S[3,1] <- "g"
+sense_max_S[4,1] <- "K"
+
+
+sense_max_T <- as.data.frame(sense_max$T)
+
+sense_max_T <- sense_max_T %>% 
+  rowid_to_column(var = "params")
+
+sense_max_T[1,1] <- "threshold"
+sense_max_T[2,1] <- "r"
+sense_max_T[3,1] <- "g"
+sense_max_T[4,1] <- "K"
+
+```
 
 # 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth

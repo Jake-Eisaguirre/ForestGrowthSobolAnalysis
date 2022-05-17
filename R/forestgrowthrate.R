@@ -6,17 +6,20 @@
 #' @param parms$g - linear forest growth rate (kg/year)
 #' @parms parms$K - carrying capacity (kg C)
 #' @parms parms$threshold - canopy closure threshold (kg C)
-#' @return change in forest size with time
+#' @return dC change in forest size with time
 #'
 dgrowthrate = function(time, C, parms) {
   
   # compute rate of forest growth when C < threshold
-  dC = parms$r*C
+  if(C < parms$threshold) {
+    dC = parms$r*C
+    return(list(dC))
+  }
   
   # compute rate of forest growth when C > = threshold
-  if(C >= parms$threshold) {
+  else{
     dC = parms$g * (1 - C/parms$K)
     
-  }
   return(list(dC))
+  }
 }
