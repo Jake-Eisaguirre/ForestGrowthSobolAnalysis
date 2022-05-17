@@ -147,7 +147,6 @@ sens_forestSize_df <- sens_forestSize_df %>%
          g = "V3", 
          threshold = "V4")
 ```
->>>>>>> 03c901cfbd82ecf2af10a3735460cfdbf6aa20cd
 
 
 ```{r, wrapper}
