@@ -313,5 +313,12 @@ plotTmax
 
 # 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth
 
+Based on the boxplot of the sensitivity analysis we can see that the max carbon ranges from ~170-190kg with in the IQR. With max and min values of ~245kg and ~120kg respectively. The mean carbon ranging from ~60-80kg within the IQR and with max and min values of ~115kg and ~30kg. This figure and values give insight to understanding how the model will react for mean and max carbon when providing a range of inputs. 
 
+The mean first order index shows canopy closure threshold having the greatest sensitivity to change. The maximum first order index follows a similar trend of parameter sensitivity but with diminished differences between parameters. Based on first order index sensitivity we know canopy closure threshold and exponential growth rate hold the most weight in affecting the model.
+
+
+The mean total effect index indicates that canopy closure threshold will have the greatest impact on model sensitivity. The Max total effect index indicates that canopy closure threshold and exponential growth rate will impact the model the greatest. These trends are similar to the first order index. 
+
+When thinking about these results in regards to climate change, we might hypothesis that as average temperatures increase we could see decreased growth in forests. This would affect the canopy closure threshold and growth rate, thus leading to potentially a greater decrease in forest carbon storage. 
 
