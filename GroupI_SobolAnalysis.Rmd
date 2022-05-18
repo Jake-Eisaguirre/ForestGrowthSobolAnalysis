@@ -256,7 +256,8 @@ sense_max_T[4,1] <- "K"
 plotSmean <- sense_mean_S %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
-  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), 
+                    labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
@@ -285,7 +286,8 @@ plotSmax
 plotTmean <- sense_mean_T %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
-  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), 
+                    labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
