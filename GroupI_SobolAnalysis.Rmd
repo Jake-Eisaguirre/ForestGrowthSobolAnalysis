@@ -11,7 +11,7 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.width=6, fig.height=4, fig.pos='!H')
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, fig.pos='!H')
 ```
 
 # Growth Model & Sobol Sensitivity Analysis
@@ -34,6 +34,8 @@ library(deSolve)
 library(sensitivity)
 library(purrr)
 library(viridis)
+library(patchwork)
+
 ```
 
 # 1. Implement a forest growth rate model 
@@ -248,9 +250,66 @@ sense_max_T[4,1] <- "K"
 ```
 
 
-```{r, plot S T}
+```{r, plot FOE mean, fig.cap="Mean First Order Effect Sensitivity Index of forest growth"}
+plotSmean <- sense_mean_S %>% 
+  ggplot(aes(x = original, y = parms, fill = parms)) +
+  geom_col() + 
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  labs(fill = "Parameter", 
+       x = "Sobol Sensitivity Value", 
+       y = "Parameter",
+       title = "Mean First Order Sensitivity Index") + 
+  theme_minimal()
 
+plotSmean
 ```
+
+```{r, plot FOE max, fig.cap="Maximum First Order Effect Sensitivity Index of forest growth"}
+plotSmax <- sense_max_S %>% 
+  ggplot(aes(x = original, y = parms, fill = parms)) +
+  geom_col() + 
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"),
+                    labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  labs(fill = "Parameter", 
+       x = "Sobol Sensitivity Value", 
+       y = "Parameter",
+       title = "Maximum First Order Sensitivity Index") + 
+  theme_minimal() 
+
+plotSmax
+```
+
+```{r, plot TE mean, fig.cap="Mean Total Effect Sensitivity Index of forest growth"}
+plotTmean <- sense_mean_T %>% 
+  ggplot(aes(x = original, y = parms, fill = parms)) +
+  geom_col() + 
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"), labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  labs(fill = "Parameter", 
+       x = "Sobol Sensitivity Value", 
+       y = "Parameter",
+       title = "Mean Total Effect Sensitivity Index") + 
+  theme_minimal()
+
+plotTmean
+```
+
+
+```{r, plot TE max, fig.cap="Maximum Total Effect Sensitivity Index of forest growth"}
+plotTmax <- sense_max_T %>% 
+  ggplot(aes(x = original, y = parms, fill = parms)) +
+  geom_col() + 
+  scale_fill_manual(values = c("goldenrod2", "indianred1","slateblue3", "darkolivegreen"),
+                    labels = c("Linear Growth Rate", "Carrying Capacity", "Exponential Growth Rate", "Canopy Closure Threshold")) +
+  labs(fill = "Parameter", 
+       x = "Sobol Sensitivity Value", 
+       y = "Parameter",
+       title = "Maximum Total Effect Sensitivity Index") + 
+  theme_minimal() 
+
+plotTmax
+```
+
+
 
 # 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth
 
