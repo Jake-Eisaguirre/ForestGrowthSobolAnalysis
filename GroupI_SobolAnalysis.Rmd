@@ -142,8 +142,10 @@ X2 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
 # create sobol object and get parameters
 sens_forest <- sobolSalt(model = NULL, X1, X2, nboot = 300)
 
+#extract the parameter sets into dataframe
 sens_forestSize_df <- as.data.frame(sens_forest$X) 
 
+# Rename the parameters to more meaningful names
 sens_forestSize_df <- sens_forestSize_df %>% 
   rename(r = "V1", 
          K = "V2", 
@@ -154,6 +156,7 @@ sens_forestSize_df <- sens_forestSize_df %>%
 
 ```{r, wrapper}
 
+# Set up wrapper function 
 p_wrapper = function(threshold, r, g, K, initialsize, years, func) {
   
   parms <- list(threshold = threshold, r = r, g = g, K = K)
@@ -165,7 +168,7 @@ p_wrapper = function(threshold, r, g, K, initialsize, years, func) {
   
   colnames(forest_sensitivity) = c("years","C")
 
-  # get metrics
+  # calculate the summarizing metric (max and mean carbon values) from the wrapper function
   
   max_carbon <- max(forest_sensitivity$C)
   mean_carbon <- mean(forest_sensitivity$C)
@@ -176,13 +179,16 @@ p_wrapper = function(threshold, r, g, K, initialsize, years, func) {
 
 
 ```{r, forest senstivity results}
+# Using pmap to run parameter sets into wrapper function
 allresults = sens_forestSize_df %>% 
   pmap(p_wrapper, initialsize = initialsize, years = years,
        func = dgrowthrate)
 
+# Extract the results for max and mean carbon values
 allres = allresults %>% 
   map_dfr(`[`,c("max_carbon","mean_carbon"))
 
+#Turn the extracted results into format that easier to plot
 all_results <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to = "name", values_to = "carbon")
 ```
 
@@ -190,6 +196,8 @@ all_results <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to 
 # 3.B. Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). 
 
 ```{r, box plot, fig.cap="Sobol sensitivity analysis results for forest growth rate model maximum and mean forest size"}
+
+# Make boxplot for max and mean carbon values for over 300 years
 results_plot <- all_results %>% 
   ggplot(aes(y = carbon, x = name, fill = name)) +
   geom_boxplot() +
@@ -204,23 +212,29 @@ results_plot
 ```
 
 ```{r, mean}
+
+# Use "tell" to send the mean carbon values over 300 years to sobol analysis
 sense_mean <- sensitivity::tell(sens_forest, allres$mean_carbon)
 
+# Calculate the first order sobol indices for mean carbon values over 300 years
 sense_mean_S <- as.data.frame(sense_mean$S)
 
 sense_mean_S <- sense_mean_S %>% 
   rowid_to_column(var = "parms")
 
+# Give parameters more meaningful names
 sense_mean_S[1,1] <- "threshold"
 sense_mean_S[2,1] <- "r"
 sense_mean_S[3,1] <- "g"
 sense_mean_S[4,1] <- "K"
 
+# Calculate the total effect sobol indices for mean carbon values over 300 years
 sense_mean_T <- as.data.frame(sense_mean$T)
 
 sense_mean_T <- sense_mean_T %>% 
   rowid_to_column(var = "parms")
 
+# Give parameters more meaningful names
 sense_mean_T[1,1] <- "threshold"
 sense_mean_T[2,1] <- "r"
 sense_mean_T[3,1] <- "g"
@@ -228,23 +242,29 @@ sense_mean_T[4,1] <- "K"
 ```
 
 ```{r, max}
+
+# Use "tell" to send the max carbon values over 300 years to sobol analysis
 sense_max <- sensitivity::tell(sens_forest, allres$max_carbon)
 
+# Calculate the first order sobol indecies for max carbon values over 300 years
 sense_max_S <- as.data.frame(sense_max$S)
 
 sense_max_S <- sense_max_S %>% 
   rowid_to_column(var = "parms")
 
+# Give parameters more meaningful names
 sense_max_S[1,1] <- "threshold"
 sense_max_S[2,1] <- "r"
 sense_max_S[3,1] <- "g"
 sense_max_S[4,1] <- "K"
 
+# Calculate the total effect sobol indecies for max carbon values over 300 years
 sense_max_T <- as.data.frame(sense_max$T)
 
 sense_max_T <- sense_max_T %>% 
   rowid_to_column(var = "parms")
 
+# Give parameters more meaningful names
 sense_max_T[1,1] <- "threshold"
 sense_max_T[2,1] <- "r"
 sense_max_T[3,1] <- "g"
@@ -253,6 +273,9 @@ sense_max_T[4,1] <- "K"
 
 
 ```{r, plot FOE mean, fig.cap="Mean First Order Effect Sensitivity Index of forest growth"}
+
+# Plot the first order sobol indicies for mean carbon values over 300 years
+
 plotSmean <- sense_mean_S %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
@@ -268,6 +291,9 @@ plotSmean
 ```
 
 ```{r, plot FOE max, fig.cap="Maximum First Order Effect Sensitivity Index of forest growth"}
+
+# Plot the first order sobol indicies for max carbon values over 300 years
+
 plotSmax <- sense_max_S %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
@@ -283,6 +309,9 @@ plotSmax
 ```
 
 ```{r, plot TE mean, fig.cap="Mean Total Effect Sensitivity Index of forest growth"}
+
+# Plot the total effect sobol indicies for mean carbon values over 300 years
+
 plotTmean <- sense_mean_T %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
@@ -299,6 +328,9 @@ plotTmean
 
 
 ```{r, plot TE max, fig.cap="Maximum Total Effect Sensitivity Index of forest growth"}
+
+# Plot the total effect sobol indicies for max carbon values over 300 years
+
 plotTmax <- sense_max_T %>% 
   ggplot(aes(x = original, y = parms, fill = parms)) +
   geom_col() + 
