@@ -51,7 +51,7 @@ dgrowthrate
 
 ## Parameters for model
 
-- K = 250 kg C (carrying capacity)
+- K = 250 kgC (carrying capacity)
 - r = 0.01 (exponential growth rate before before canopy closure)
 - g = 2 kg/year (linear growth rate after canopy closure)
 - threshold = 50 kgC (canopy closure threshold)
@@ -138,8 +138,7 @@ X2 = cbind.data.frame(r = r, K = K, g = g, threshold = threshold)
 # create sobol object and get parameters
 sens_forest <- sobolSalt(model = NULL, X1, X2, nboot = 300)
 
-sens_forestSize_df <- sens_forest$X %>% 
-  as.data.frame()
+sens_forestSize_df <- as.data.frame(sens_forest$X) 
 
 sens_forestSize_df <- sens_forestSize_df %>% 
   rename(r = "V1", 
@@ -150,6 +149,7 @@ sens_forestSize_df <- sens_forestSize_df %>%
 
 
 ```{r, wrapper}
+
 p_wrapper = function(threshold, r, g, K, initialsize, years, func) {
   
   parms <- list(threshold = threshold, r = r, g = g, K = K)
@@ -192,14 +192,14 @@ results_plot <- all_results %>%
   scale_fill_viridis(discrete = TRUE, alpha=0.6) +
   labs(x= "", y = "Carbon (kg)",
        title = "Sobol Analysis - Forest Growth",
-       subtitle = "Max & mean values of Carbon over 300 years)") +
+       subtitle = "Max & mean values of Carbon over 300 years") +
   theme_minimal() +
   theme(legend.position="none")
   
 results_plot
 ```
 
-```{r}
+```{r, mean}
 sense_mean <- sensitivity::tell(sens_forest, allres$mean_carbon)
 
 sense_mean_S <- as.data.frame(sense_mean$S)
@@ -221,9 +221,9 @@ sense_mean_T[1,1] <- "threshold"
 sense_mean_T[2,1] <- "r"
 sense_mean_T[3,1] <- "g"
 sense_mean_T[4,1] <- "K"
+```
 
-
-
+```{r, max}
 sense_max <- sensitivity::tell(sens_forest, allres$max_carbon)
 
 sense_max_S <- as.data.frame(sense_max$S)
@@ -236,7 +236,6 @@ sense_max_S[2,1] <- "r"
 sense_max_S[3,1] <- "g"
 sense_max_S[4,1] <- "K"
 
-
 sense_max_T <- as.data.frame(sense_max$T)
 
 sense_max_T <- sense_max_T %>% 
@@ -246,7 +245,14 @@ sense_max_T[1,1] <- "threshold"
 sense_max_T[2,1] <- "r"
 sense_max_T[3,1] <- "g"
 sense_max_T[4,1] <- "K"
+```
+
+
+```{r, plot S T}
 
 ```
 
 # 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth
+
+
+
