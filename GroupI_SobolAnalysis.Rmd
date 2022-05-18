@@ -20,9 +20,10 @@ This environmental model was completed as an assignment for the course, Environm
 
 ### Parameters
 
-- K = carrying capacity (C)
+- K = carrying capacity (kgC)
 - r = pre-canopy closure rate
 - g = post-canopy closure rate
+- threshold = canopy closure threshold (kgC)
 
 ## Load Libraries
 ```{r, message=FALSE, warning=FALSE}
@@ -34,7 +35,6 @@ library(deSolve)
 library(sensitivity)
 library(purrr)
 library(viridis)
-library(patchwork)
 
 ```
 
@@ -84,10 +84,10 @@ colnames(results) = c("year", "C")
 
 ```{r}
 # view sample of df
-results_sample <- head(results) 
+results_sample <- head(results, n = 10) 
 
 results_table <- kable(results_sample, 
-                         caption = "Sample of Forest Growth ODE Model Results") %>% 
+                         caption = "Sample of Forest Growth ODE Model Results for 10 Years") %>% 
   kable_styling(latex_options = "HOLD_position")
 
 results_table
@@ -95,12 +95,14 @@ results_table
 ```
 
 
-```{r, ode plot}
+```{r, ode plot, fig.cap="ODE solver results for forest growth rate model"}
 # plot results
 model01_plot <- results %>% 
   ggplot(aes(x = year, y = C)) +
   geom_point(color = "darkgreen") + 
-  labs(x = "Years", y = "Forest Size (C kg)",
+  geom_text(aes(x = 300, y = 190, label = "183.72"), stat = "unique",
+size = 3, color = "slategrey") +
+  labs(x = "Years", y = "Forest Size (kgC)",
        title = "Forest Growth Rate - 300 Years",
        subtitle = "K = 250 kgC, r = 0.01, g = 2 kg/yr, Canopy closure threshold = 50 kgC") +
   theme_minimal()
@@ -187,7 +189,7 @@ all_results <- pivot_longer(allres, cols = c(max_carbon, mean_carbon), names_to 
 
 # 3.B. Graph the results of the sensitivity analysis as a box plot of maximum forest size and a plot of the two Sobol indices (S and T). 
 
-```{r, box plot}
+```{r, box plot, fig.cap="Sobol sensitivity analysis results for forest growth rate model maximum and mean forest size"}
 results_plot <- all_results %>% 
   ggplot(aes(y = carbon, x = name, fill = name)) +
   geom_boxplot() +
@@ -258,7 +260,7 @@ plotSmean <- sense_mean_S %>%
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
-       title = "Mean First Order Sensitivity Index") + 
+       title = "First Order Sensitivity Index for Mean Forest Growth") + 
   theme_minimal()
 
 plotSmean
@@ -273,7 +275,7 @@ plotSmax <- sense_max_S %>%
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
-       title = "Maximum First Order Sensitivity Index") + 
+       title = "First Order Sensitivity Index for Maximum Forest Growth") + 
   theme_minimal() 
 
 plotSmax
@@ -287,7 +289,7 @@ plotTmean <- sense_mean_T %>%
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
-       title = "Mean Total Effect Sensitivity Index") + 
+       title = "Total Effect Sensitivity Index for Mean Forest Growth") + 
   theme_minimal()
 
 plotTmean
@@ -303,12 +305,11 @@ plotTmax <- sense_max_T %>%
   labs(fill = "Parameter", 
        x = "Sobol Sensitivity Value", 
        y = "Parameter",
-       title = "Maximum Total Effect Sensitivity Index") + 
+       title = "Total Effect Sensitivity Index for Maximum Forest Growth") + 
   theme_minimal() 
 
 plotTmax
 ```
-
 
 
 # 3.C. Discuss what the results of your simulation might mean for climate change impacts on forest growth
@@ -316,7 +317,6 @@ plotTmax
 Based on the boxplot of the sensitivity analysis we can see that the max carbon ranges from ~170-190kg with in the IQR. With max and min values of ~245kg and ~120kg respectively. The mean carbon ranging from ~60-80kg within the IQR and with max and min values of ~115kg and ~30kg. This figure and values give insight to understanding how the model will react for mean and max carbon when providing a range of inputs. 
 
 The mean first order index shows canopy closure threshold having the greatest sensitivity to change. The maximum first order index follows a similar trend of parameter sensitivity but with diminished differences between parameters. Based on first order index sensitivity we know canopy closure threshold and exponential growth rate hold the most weight in affecting the model.
-
 
 The mean total effect index indicates that canopy closure threshold will have the greatest impact on model sensitivity. The Max total effect index indicates that canopy closure threshold and exponential growth rate will impact the model the greatest. These trends are similar to the first order index. 
 
